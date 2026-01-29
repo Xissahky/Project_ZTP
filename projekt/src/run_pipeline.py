@@ -9,6 +9,8 @@ from .data import load_raw_data, basic_cleaning, merge_sources, make_train_test
 from .train import train_logreg, train_random_forest, save_model
 from .evaluate import evaluate_classifier, compare_models
 from .utils import describe_basic, plot_target_hist
+from .interpret import get_feature_importance_rf
+
 
 TARGET_COL = "paid_on_time"
 
@@ -49,9 +51,26 @@ def main() -> None:
         results.append(metrics)
         save_model(m)
 
+
     table = compare_models(results)
     table_path = paths.reports_dir / "metrics.csv"
     table.to_csv(table_path, index=False)
+
+
+
+    # ---- Feature importance for Random Forest ----
+    rf_model = next(m for m in models if m.name == "rf")
+    importance_df = get_feature_importance_rf(rf_model.pipeline, top_n=25)
+
+    importance_path = paths.reports_dir / "feature_importance.csv"
+    importance_df.to_csv(importance_path, index=False)
+
+    print("\nTop cechy wpływające na decyzję modelu (Random Forest):")
+    print(importance_df.to_string(index=False))
+    print(f"\nSaved: {importance_path}")
+
+
+
 
     print("Done")
     print(table.to_string(index=False))
